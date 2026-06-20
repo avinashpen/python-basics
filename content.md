@@ -832,3 +832,480 @@ handler: Callable[[int], bool]
 - **defaultdict** read access creates the key — use plain `dict.get` when you must not mutate.
 - **Recursion limit ~1000** — raise it or convert deep recursion to iterative with an explicit stack.
 - **String concat in a loop** is O(n²) — collect into a list and `"".join(...)`.
+
+
+# PART IV — Python Essentials, OOP Deep Cuts & File I/O
+
+## 1. Type Conversions & Division
+
+```python
+int("42")            # str -> int
+int("ff", 16)        # 255  parse with a base (also base 2, 8)
+int(3.9)             # 3    float -> int TRUNCATES toward zero, not floor
+int(-3.9)            # -3   (so int() differs from // for negatives)
+int("3.5")           # ValueError! can't parse a float-looking string
+int(float("3.5"))    # 3    go through float first
+
+float("3.14")        # 3.14
+float("1e3")         # 1000.0
+float("inf")         # sentinel for DP / Dijkstra init; also float("-inf")
+
+str(42)              # "42"
+str([1, 2])          # "[1, 2]"  <- the repr, almost never what you want
+bool(0), bool(""), bool([]), bool(None)   # all False (the falsy set)
+
+ord('a')             # 97   char -> int
+chr(97)              # 'a'  int -> char
+ord(c) - ord('a')    # 0..25 bucket index for lowercase counting
+```
+
+`bool` is a subclass of `int`, so `True + True == 2` — occasionally a subtle bug.
+
+### Division — which operator yields which type
+
+```python
+6 / 2                # 3.0   "/" is TRUE division -> ALWAYS float
+7 // 2               # 3     "//" floor division -> int if both int
+7.0 // 2             # 3.0   ...float if either operand is float
+-7 // 2              # -4    floors toward -infinity
+int(-7 / 2)          # -3    truncates toward zero  <- differs from // !
+-7 % 3               # 2     modulo sign follows the DIVISOR in Python
+divmod(17, 5)        # (3, 2) = (17 // 5, 17 % 5)
+2 ** 10              # 1024  int; 2 ** 0.5 -> float
+pow(2, 10, 1000)     # 24    fast modular exponentiation
+round(2.5)           # 2     banker's rounding (half to EVEN): round(3.5) -> 4
+```
+
+`divmod` is the clean flat-index <-> grid-coordinate converter:
+
+```python
+r, c = divmod(idx, cols)     # flat -> (row, col)
+idx = r * cols + c           # (row, col) -> flat
+```
+
+### Collection conversions — one rule
+
+Every collection constructor takes any iterable, so a cast is just `Target(iterable)`.
+
+| From → To | How | Why you'd do it |
+|---|---|---|
+| list → set | `set(xs)` | dedup + O(1) membership (loses order & dups) |
+| list → tuple | `tuple(xs)` | make it hashable — dict key, set element, memo key |
+| set/dict → list | `list(s)`, `sorted(s)` | need indexing, ordering, or sorting |
+| str → list | `list(s)` | mutate characters (strings are immutable) |
+| chars → str | `"".join(chars)` | rebuild the string |
+| ints → str | `"".join(map(str, nums))` | join requires strings |
+| digits str → ints | `[int(c) for c in s]` | per-digit work |
+| dict → pairs | `list(d.items())` | iterate/sort key-value pairs |
+| pairs → dict | `dict(pairs)` | build a lookup |
+| two lists → dict | `dict(zip(keys, vals))` | map one list onto another |
+
+```python
+list("abc")               # ['a', 'b', 'c']
+set([1, 1, 2])            # {1, 2}
+list(d)                   # dict -> list of KEYS (not items!)
+a, b = zip(*pairs)        # "unzip" -> two tuples
+list(zip(*matrix))        # transpose rows <-> cols
+```
+
+Element-wise vs container conversion differ: `list(map(int, tokens))` converts each element; `tuple(xs)` converts the container.
+
+## 2. String Methods
+
+```python
+s.strip()             # trim whitespace ends (or chars: s.strip(".,"))
+s.lstrip(); s.rstrip()
+s.split()             # split on any whitespace, drop empties
+s.split(",")          # split on a delimiter (keeps empties)
+s.split(",", 1)       # limit splits;  s.rsplit(",", 1) from the right
+s.splitlines()        # split on line boundaries
+",".join(parts)       # parts must all be strings
+s.replace("a", "b")   # replace all (add count arg to limit)
+s.find("x")           # index or -1  (safe)
+s.index("x")          # index or ValueError
+s.count("ab")         # non-overlapping occurrences
+s.startswith("pre")   # also accepts a tuple of options
+s.endswith((".py", ".txt"))
+s.lower(); s.upper(); s.title(); s.capitalize(); s.swapcase()
+s.isdigit(); s.isalpha(); s.isalnum(); s.isspace(); s.islower()
+s.zfill(5)            # "42" -> "00042"
+s.ljust(8); s.rjust(8); s.center(8)   # pad to a width
+```
+
+Strings are immutable, so every method returns a new string. To edit characters, go `list(s)` -> mutate -> `"".join(...)`.
+
+## 3. Slicing
+
+```python
+a[start:stop:step]    # stop is EXCLUSIVE
+a[2:5]                # indices 2, 3, 4
+a[:3]; a[3:]          # head / tail
+a[-1]; a[-2]          # from the end
+a[::-1]               # reversed copy
+a[::2]                # every other
+a[:]                  # shallow copy of the whole sequence
+s[i:j]                # substrings slice the same way
+a[1:3] = [9, 9, 9]    # slice assignment (lists) — can change length
+del a[1:3]            # delete a slice
+```
+
+Out-of-range slice bounds are clamped (no error): `a[:100]` is safe, while `a[100]` raises `IndexError`.
+
+## 4. Sorting in Depth
+
+```python
+sorted(xs)                                  # new list; xs.sort() sorts in place
+sorted(xs, reverse=True)
+sorted(words, key=len)                      # by a derived key
+sorted(pts, key=lambda p: (p[0], -p[1]))    # multi-key, mixed direction
+# sort is STABLE: equal keys keep input order (sort by secondary, then primary)
+
+from operator import itemgetter, attrgetter
+sorted(rows, key=itemgetter(1, 0))          # by column 1, then column 0
+sorted(objs, key=attrgetter("age"))
+
+from functools import cmp_to_key
+# "Largest Number": order so concatenation is biggest
+nums = sorted(map(str, [3, 30, 34, 5, 9]),
+              key=cmp_to_key(lambda a, b: (a + b < b + a) - (a + b > b + a)))
+# -> ['9', '5', '34', '3', '30']
+```
+
+## 5. Math & Numerics
+
+```python
+import math
+math.gcd(12, 18)      # 6     (math.lcm in 3.9+)
+math.lcm(4, 6)        # 12
+math.isqrt(17)        # 4     integer sqrt, no float error
+math.floor(2.7); math.ceil(2.1)
+math.factorial(5)     # 120
+math.comb(5, 2)       # 10    nCr   (math.perm for nPr)
+math.inf              # same as float("inf")
+math.isnan(x); math.isclose(a, b)          # safe float comparisons
+
+abs(-5); pow(2, 10); pow(2, 10, 1000)      # modular pow
+(5).bit_length()      # 3
+(7).bit_count()       # 3     set-bit count (3.10+); else bin(7).count("1")
+```
+
+Two Python-specific points to say out loud: **ints are arbitrary precision** — they never overflow (unlike Java/C++), and floats are IEEE-754 doubles, so `0.1 + 0.2 != 0.3` — compare with `math.isclose` or use integer/`Decimal` math when exactness matters.
+
+## 6. Unpacking & Argument Forms
+
+```python
+a, b = b, a                  # swap, no temp
+first, *rest = seq           # rest is a list
+*init, last = seq
+a, (b, c) = 1, (2, 3)        # nested
+
+merged = [*a, *b]            # list splat
+combined = {**d1, **d2}      # dict merge (later keys win)
+f(*args, **kwargs)           # spread into a call
+
+def f(a, b, /, c, *, d):     # "/" = positional-only, "*" = keyword-only
+    ...
+# a, b must be positional;  d must be passed by name
+```
+
+## 7. Copying, Scope & Hashability
+
+```python
+import copy
+shallow = copy.copy(obj)         # or list[:], dict.copy(), set.copy()
+deep    = copy.deepcopy(obj)     # independent nested structures
+
+grid = [[0] * 3] * 3             # WRONG: 3 references to one row
+grid = [[0] * 3 for _ in range(3)]   # right
+```
+
+**Scope (LEGB)** — names resolve Local -> Enclosing -> Global -> Built-in. `global x` and `nonlocal x` let you rebind names in outer scopes.
+
+**Hashability** — usable as dict keys / set members: immutables (`int, float, str, bool, frozenset`, and tuples of hashables). NOT hashable: `list, dict, set`. That's why you cast a list to a tuple to use it as a memo key or a visited-state marker.
+
+## 8. OOP — Deeper
+
+### property with setter and deleter
+```python
+class Temp:
+    def __init__(self, c=0):
+        self._c = c
+    @property
+    def c(self):               # getter:  t.c
+        return self._c
+    @c.setter
+    def c(self, value):        # setter:  t.c = 5
+        if value < -273.15:
+            raise ValueError("below absolute zero")
+        self._c = value
+    @c.deleter
+    def c(self):               # del t.c
+        del self._c
+```
+
+### __str__ vs __repr__
+```python
+class P:
+    def __init__(self, x):
+        self.x = x
+    def __repr__(self):        # unambiguous, for devs/debugging/REPL
+        return f"P(x={self.x})"
+    def __str__(self):         # readable, for print() / users
+        return f"point {self.x}"
+# print(p) uses __str__; the REPL and repr(p) use __repr__. Define __repr__ at minimum.
+```
+
+### Dunders that make objects behave like built-ins
+```python
+class Bag:
+    def __init__(self):
+        self._d = {}
+    def __len__(self):          return len(self._d)      # len(bag)
+    def __getitem__(self, k):   return self._d[k]         # bag[k]
+    def __setitem__(self, k, v): self._d[k] = v           # bag[k] = v
+    def __contains__(self, k):  return k in self._d        # k in bag
+    def __iter__(self):         return iter(self._d)       # for x in bag
+    def __call__(self, k):      return self._d.get(k)      # bag(k) — callable
+```
+
+### Get all comparisons from two methods
+```python
+from functools import total_ordering
+
+@total_ordering
+class V:
+    def __init__(self, n):
+        self.n = n
+    def __eq__(self, o): return self.n == o.n
+    def __lt__(self, o): return self.n < o.n
+    # total_ordering supplies <=, >, >=, !=
+```
+
+### The __eq__ / __hash__ contract
+```python
+# Defining __eq__ makes the class UNHASHABLE unless you also define __hash__.
+class Pt:
+    def __init__(self, x, y):
+        self.x, self.y = x, y
+    def __eq__(self, o):
+        return (self.x, self.y) == (o.x, o.y)
+    def __hash__(self):                       # required to put Pt in a set/dict
+        return hash((self.x, self.y))
+```
+
+### __new__ vs __init__ (allocation vs initialization)
+```python
+class Singleton:
+    _inst = None
+    def __new__(cls):
+        if cls._inst is None:
+            cls._inst = super().__new__(cls)  # allocation happens here
+        return cls._inst
+    def __init__(self):
+        ...                                   # runs on every call — init carefully
+```
+
+### Encapsulation conventions
+```python
+self.public        # part of the API
+self._internal     # convention: "don't touch" (NOT enforced)
+self.__mangled     # name-mangled to _Class__mangled (avoids subclass clashes)
+# Python has no truly private members.
+```
+
+### MRO & multiple inheritance
+```python
+class A: ...
+class B(A): ...
+class C(A): ...
+class D(B, C): ...        # diamond
+D.__mro__                 # D -> B -> C -> A -> object  (C3 linearization)
+# super() follows the MRO, not just the literal parent -> cooperative inheritance
+```
+
+### Duck typing and Protocol (structural interfaces)
+```python
+# "If it has the methods, it works" — no explicit interface/inheritance needed.
+from typing import Protocol
+
+class Comparable(Protocol):
+    def __lt__(self, other) -> bool: ...
+# Any class with __lt__ satisfies Comparable — structural, not nominal typing.
+```
+
+### Composition over inheritance
+```python
+# Prefer has-a (composition) over is-a (inheritance) when sharing behavior, not identity.
+class Engine: ...
+class Car:
+    def __init__(self):
+        self.engine = Engine()    # swappable, looser coupling
+```
+
+### Runtime checks, the class-mutable trap, and richer dataclasses
+```python
+isinstance(x, (int, float))       # tuple = "any of"
+issubclass(Savings, Account)
+
+class Bad:
+    items = []                    # SHARED across all instances — mutating leaks!
+class Good:
+    def __init__(self):
+        self.items = []           # per-instance
+
+from dataclasses import dataclass
+
+@dataclass(frozen=True)           # immutable + hashable (usable as a dict key)
+class Point:
+    x: int
+    y: int
+    def __post_init__(self):      # validation after the auto __init__
+        if self.x < 0:
+            raise ValueError("x must be non-negative")
+
+from typing import NamedTuple
+
+class Color(NamedTuple):          # typed, immutable, lightweight record
+    r: int
+    g: int
+    b: int
+```
+
+## 9. File Access, Processing & Error Handling
+
+```python
+# Reading — `with` guarantees the file closes, even on exception
+with open("data.txt", encoding="utf-8") as f:
+    text = f.read()               # whole file as one string
+    # f.readlines()               # list of lines (each keeps its "\n")
+    # for line in f: ...          # lazy, line-by-line — best for big files
+
+# Writing / appending
+with open("out.txt", "w", encoding="utf-8") as f:   # "w" truncates
+    f.write("hello\n")
+    f.writelines(lines)           # does NOT add newlines for you
+
+# Strip the trailing newline while processing
+with open("data.txt") as f:
+    rows = [line.rstrip("\n") for line in f]
+```
+
+File modes:
+
+```text
+"r"  read (default)        "w"  write (truncate)      "a"  append
+"x"  create, fail if exists                           "+"  read + write
+"b"  binary (rb / wb)      "t"  text (default)
+```
+
+`pathlib` for paths and one-shot read/write:
+
+```python
+from pathlib import Path
+p = Path("data") / "input.txt"    # OS-safe join
+p.exists(); p.is_file(); p.is_dir()
+text = p.read_text(encoding="utf-8")   # read in one call
+p.write_text("...")                    # write in one call
+p.name; p.stem; p.suffix; p.parent     # "input.txt", "input", ".txt", Path("data")
+list(Path(".").glob("*.py"))           # pattern search
+```
+
+JSON and CSV:
+
+```python
+import json
+with open("config.json") as f:
+    cfg = json.load(f)            # file -> object
+with open("out.json", "w") as f:
+    json.dump(cfg, f, indent=2)   # object -> file
+obj = json.loads(s)              # string <-> object  (json.dumps to serialize)
+
+import csv
+with open("data.csv", newline="") as f:    # newline="" is required for csv
+    for row in csv.DictReader(f):           # each row is a dict keyed by header
+        ...
+with open("out.csv", "w", newline="") as f:
+    w = csv.writer(f)
+    w.writerow(["name", "score"])
+    w.writerows(rows)
+```
+
+File error handling — catch the specific failure:
+
+```python
+from pathlib import Path
+
+try:
+    text = Path("maybe.txt").read_text(encoding="utf-8")
+except FileNotFoundError:
+    text = ""                     # sensible default
+except PermissionError:
+    raise                         # can't fix it here
+except UnicodeDecodeError:
+    text = Path("maybe.txt").read_text(errors="replace")
+except OSError as e:              # base class for I/O failures
+    raise
+```
+
+| Exception | Raised when |
+|---|---|
+| `FileNotFoundError` | path doesn't exist (read mode) |
+| `PermissionError` | no read/write permission |
+| `IsADirectoryError` | opened a directory as a file |
+| `FileExistsError` | `"x"` mode on an existing file |
+| `UnicodeDecodeError` | bytes don't decode with the given encoding |
+| `OSError` | base class for all of the above |
+
+The `with` block is the idiomatic guarantee the handle closes; the manual equivalent is `try/finally` with `f.close()`.
+
+## 10. I/O & Input Parsing (online-assessment settings)
+
+```python
+n = int(input())                        # one int on a line
+a, b = map(int, input().split())        # two ints on a line
+nums = list(map(int, input().split()))  # a row of ints
+grid = [input().split() for _ in range(rows)]
+
+import sys
+data = sys.stdin.read().split()         # fast bulk read; index through tokens
+it = iter(data)
+n = int(next(it))
+
+print(*nums, sep=" ")                   # space-separated row
+sys.stdout.write("\n".join(map(str, results)))   # fast bulk output
+```
+
+CodeSignal / HackerRank / Codility OAs hand you raw stdin and make you parse it — directly relevant to OA-format rounds. For large inputs, `sys.stdin` beats repeated `input()`.
+
+## 11. Smaller Things Worth Knowing
+
+f-string format mini-language:
+
+```python
+f"{x:.2f}"      # 2 decimals
+f"{n:04d}"      # zero-pad to width 4
+f"{n:,}"        # thousands separators
+f"{n:b}"        # binary  (also :x hex, :o octal)
+f"{s:<8}"       # left-pad (also :>8 right, :^8 center)
+f"{r:.1%}"      # percentage
+```
+
+```python
+from operator import itemgetter, attrgetter, add
+from functools import partial
+inc = partial(add, 1)           # inc(5) -> 6
+
+[1, 2] < [1, 3]                 # True — lists/tuples compare lexicographically
+
+from collections import ChainMap
+cfg = ChainMap(overrides, defaults)   # layered lookup, first match wins
+
+from contextlib import suppress
+with suppress(KeyError):        # ignore a specific exception cleanly
+    del d[k]
+
+import re
+re.findall(r"\d+", s)           # all digit-runs
+re.sub(r"\s+", " ", s)          # collapse whitespace
+re.match(r"^[a-z]+$", s)        # anchored match -> Match or None
+```

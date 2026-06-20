@@ -164,7 +164,7 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 <header class="hero"><div class="wrap">
   <h1>Python Interview Prep</h1>
   <div class="rule"></div>
-  <div class="sub">Collections &middot; NeetCode Patterns &middot; Language Constructs</div>
+  <div class="sub">Collections Collections &middot; NeetCode Patterns &middot; Language Constructsmiddot; Patterns Collections &middot; NeetCode Patterns &middot; Language Constructsmiddot; Language Collections &middot; NeetCode Patterns &middot; Language Constructsmiddot; Essentials</div>
   <div class="meta">Staff / Senior reference &nbsp;|&nbsp; Python 3 &nbsp;|&nbsp; June 2026</div>
 </div></header>
 <div class="layout">
@@ -220,6 +220,20 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 <li><a href="#9-essential-built-ins-idioms">9. Essential Built-ins &amp; Idioms</a></li>
 <li><a href="#10-type-hints-39-style">10. Type Hints (3.9+ style)</a></li>
 <li><a href="#11-python-gotchas-interview-critical">11. Python Gotchas (interview-critical)</a></li>
+</ul>
+</li>
+<li><a href="#part-iv-python-essentials-oop-deep-cuts-file-io">PART IV — Python Essentials, OOP Deep Cuts &amp; File I/O</a><ul>
+<li><a href="#1-type-conversions-division">1. Type Conversions &amp; Division</a></li>
+<li><a href="#2-string-methods">2. String Methods</a></li>
+<li><a href="#3-slicing">3. Slicing</a></li>
+<li><a href="#4-sorting-in-depth">4. Sorting in Depth</a></li>
+<li><a href="#5-math-numerics">5. Math &amp; Numerics</a></li>
+<li><a href="#6-unpacking-argument-forms">6. Unpacking &amp; Argument Forms</a></li>
+<li><a href="#7-copying-scope-hashability">7. Copying, Scope &amp; Hashability</a></li>
+<li><a href="#8-oop-deeper">8. OOP — Deeper</a></li>
+<li><a href="#9-file-access-processing-error-handling">9. File Access, Processing &amp; Error Handling</a></li>
+<li><a href="#10-io-input-parsing-online-assessment-settings">10. I/O &amp; Input Parsing (online-assessment settings)</a></li>
+<li><a href="#11-smaller-things-worth-knowing">11. Smaller Things Worth Knowing</a></li>
 </ul>
 </li>
 </ul>
@@ -1450,7 +1464,496 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 <li><strong>defaultdict</strong> read access creates the key — use plain <code>dict.get</code> when you must not mutate.</li>
 <li><strong>Recursion limit ~1000</strong> — raise it or convert deep recursion to iterative with an explicit stack.</li>
 <li><strong>String concat in a loop</strong> is O(n²) — collect into a list and <code>"".join(...)</code>.</li>
-</ul></main>
+</ul>
+<h1 id="part-iv-python-essentials-oop-deep-cuts-file-io"><a class="toclink" href="#part-iv-python-essentials-oop-deep-cuts-file-io">PART IV — Python Essentials, OOP Deep Cuts &amp; File I/O</a></h1>
+<h2 id="1-type-conversions-division"><a class="toclink" href="#1-type-conversions-division">1. Type Conversions &amp; Division</a></h2>
+<div class="codehilite"><pre><span></span><code><span class="nb">int</span><span class="p">(</span><span class="s2">&quot;42&quot;</span><span class="p">)</span>            <span class="c1"># str -&gt; int</span>
+<span class="nb">int</span><span class="p">(</span><span class="s2">&quot;ff&quot;</span><span class="p">,</span> <span class="mi">16</span><span class="p">)</span>        <span class="c1"># 255  parse with a base (also base 2, 8)</span>
+<span class="nb">int</span><span class="p">(</span><span class="mf">3.9</span><span class="p">)</span>             <span class="c1"># 3    float -&gt; int TRUNCATES toward zero, not floor</span>
+<span class="nb">int</span><span class="p">(</span><span class="o">-</span><span class="mf">3.9</span><span class="p">)</span>            <span class="c1"># -3   (so int() differs from // for negatives)</span>
+<span class="nb">int</span><span class="p">(</span><span class="s2">&quot;3.5&quot;</span><span class="p">)</span>           <span class="c1"># ValueError! can&#39;t parse a float-looking string</span>
+<span class="nb">int</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="s2">&quot;3.5&quot;</span><span class="p">))</span>    <span class="c1"># 3    go through float first</span>
+
+<span class="nb">float</span><span class="p">(</span><span class="s2">&quot;3.14&quot;</span><span class="p">)</span>        <span class="c1"># 3.14</span>
+<span class="nb">float</span><span class="p">(</span><span class="s2">&quot;1e3&quot;</span><span class="p">)</span>         <span class="c1"># 1000.0</span>
+<span class="nb">float</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">)</span>         <span class="c1"># sentinel for DP / Dijkstra init; also float(&quot;-inf&quot;)</span>
+
+<span class="nb">str</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span>              <span class="c1"># &quot;42&quot;</span>
+<span class="nb">str</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>          <span class="c1"># &quot;[1, 2]&quot;  &lt;- the repr, almost never what you want</span>
+<span class="nb">bool</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="nb">bool</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">),</span> <span class="nb">bool</span><span class="p">([]),</span> <span class="nb">bool</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>   <span class="c1"># all False (the falsy set)</span>
+
+<span class="nb">ord</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">)</span>             <span class="c1"># 97   char -&gt; int</span>
+<span class="nb">chr</span><span class="p">(</span><span class="mi">97</span><span class="p">)</span>              <span class="c1"># &#39;a&#39;  int -&gt; char</span>
+<span class="nb">ord</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="o">-</span> <span class="nb">ord</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">)</span>    <span class="c1"># 0..25 bucket index for lowercase counting</span>
+</code></pre></div>
+
+<p><code>bool</code> is a subclass of <code>int</code>, so <code>True + True == 2</code> — occasionally a subtle bug.</p>
+<h3 id="division-which-operator-yields-which-type"><a class="toclink" href="#division-which-operator-yields-which-type">Division — which operator yields which type</a></h3>
+<div class="codehilite"><pre><span></span><code><span class="mi">6</span> <span class="o">/</span> <span class="mi">2</span>                <span class="c1"># 3.0   &quot;/&quot; is TRUE division -&gt; ALWAYS float</span>
+<span class="mi">7</span> <span class="o">//</span> <span class="mi">2</span>               <span class="c1"># 3     &quot;//&quot; floor division -&gt; int if both int</span>
+<span class="mf">7.0</span> <span class="o">//</span> <span class="mi">2</span>             <span class="c1"># 3.0   ...float if either operand is float</span>
+<span class="o">-</span><span class="mi">7</span> <span class="o">//</span> <span class="mi">2</span>              <span class="c1"># -4    floors toward -infinity</span>
+<span class="nb">int</span><span class="p">(</span><span class="o">-</span><span class="mi">7</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>          <span class="c1"># -3    truncates toward zero  &lt;- differs from // !</span>
+<span class="o">-</span><span class="mi">7</span> <span class="o">%</span> <span class="mi">3</span>               <span class="c1"># 2     modulo sign follows the DIVISOR in Python</span>
+<span class="nb">divmod</span><span class="p">(</span><span class="mi">17</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>        <span class="c1"># (3, 2) = (17 // 5, 17 % 5)</span>
+<span class="mi">2</span> <span class="o">**</span> <span class="mi">10</span>              <span class="c1"># 1024  int; 2 ** 0.5 -&gt; float</span>
+<span class="nb">pow</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">1000</span><span class="p">)</span>     <span class="c1"># 24    fast modular exponentiation</span>
+<span class="nb">round</span><span class="p">(</span><span class="mf">2.5</span><span class="p">)</span>           <span class="c1"># 2     banker&#39;s rounding (half to EVEN): round(3.5) -&gt; 4</span>
+</code></pre></div>
+
+<p><code>divmod</code> is the clean flat-index &lt;-&gt; grid-coordinate converter:</p>
+<div class="codehilite"><pre><span></span><code><span class="n">r</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="nb">divmod</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="n">cols</span><span class="p">)</span>     <span class="c1"># flat -&gt; (row, col)</span>
+<span class="n">idx</span> <span class="o">=</span> <span class="n">r</span> <span class="o">*</span> <span class="n">cols</span> <span class="o">+</span> <span class="n">c</span>           <span class="c1"># (row, col) -&gt; flat</span>
+</code></pre></div>
+
+<h3 id="collection-conversions-one-rule"><a class="toclink" href="#collection-conversions-one-rule">Collection conversions — one rule</a></h3>
+<p>Every collection constructor takes any iterable, so a cast is just <code>Target(iterable)</code>.</p>
+<table>
+<thead>
+<tr>
+<th>From → To</th>
+<th>How</th>
+<th>Why you'd do it</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>list → set</td>
+<td><code>set(xs)</code></td>
+<td>dedup + O(1) membership (loses order &amp; dups)</td>
+</tr>
+<tr>
+<td>list → tuple</td>
+<td><code>tuple(xs)</code></td>
+<td>make it hashable — dict key, set element, memo key</td>
+</tr>
+<tr>
+<td>set/dict → list</td>
+<td><code>list(s)</code>, <code>sorted(s)</code></td>
+<td>need indexing, ordering, or sorting</td>
+</tr>
+<tr>
+<td>str → list</td>
+<td><code>list(s)</code></td>
+<td>mutate characters (strings are immutable)</td>
+</tr>
+<tr>
+<td>chars → str</td>
+<td><code>"".join(chars)</code></td>
+<td>rebuild the string</td>
+</tr>
+<tr>
+<td>ints → str</td>
+<td><code>"".join(map(str, nums))</code></td>
+<td>join requires strings</td>
+</tr>
+<tr>
+<td>digits str → ints</td>
+<td><code>[int(c) for c in s]</code></td>
+<td>per-digit work</td>
+</tr>
+<tr>
+<td>dict → pairs</td>
+<td><code>list(d.items())</code></td>
+<td>iterate/sort key-value pairs</td>
+</tr>
+<tr>
+<td>pairs → dict</td>
+<td><code>dict(pairs)</code></td>
+<td>build a lookup</td>
+</tr>
+<tr>
+<td>two lists → dict</td>
+<td><code>dict(zip(keys, vals))</code></td>
+<td>map one list onto another</td>
+</tr>
+</tbody>
+</table>
+<div class="codehilite"><pre><span></span><code><span class="nb">list</span><span class="p">(</span><span class="s2">&quot;abc&quot;</span><span class="p">)</span>               <span class="c1"># [&#39;a&#39;, &#39;b&#39;, &#39;c&#39;]</span>
+<span class="nb">set</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>            <span class="c1"># {1, 2}</span>
+<span class="nb">list</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>                   <span class="c1"># dict -&gt; list of KEYS (not items!)</span>
+<span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">pairs</span><span class="p">)</span>        <span class="c1"># &quot;unzip&quot; -&gt; two tuples</span>
+<span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">matrix</span><span class="p">))</span>        <span class="c1"># transpose rows &lt;-&gt; cols</span>
+</code></pre></div>
+
+<p>Element-wise vs container conversion differ: <code>list(map(int, tokens))</code> converts each element; <code>tuple(xs)</code> converts the container.</p>
+<h2 id="2-string-methods"><a class="toclink" href="#2-string-methods">2. String Methods</a></h2>
+<div class="codehilite"><pre><span></span><code><span class="n">s</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>             <span class="c1"># trim whitespace ends (or chars: s.strip(&quot;.,&quot;))</span>
+<span class="n">s</span><span class="o">.</span><span class="n">lstrip</span><span class="p">();</span> <span class="n">s</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span>
+<span class="n">s</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>             <span class="c1"># split on any whitespace, drop empties</span>
+<span class="n">s</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span>          <span class="c1"># split on a delimiter (keeps empties)</span>
+<span class="n">s</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>       <span class="c1"># limit splits;  s.rsplit(&quot;,&quot;, 1) from the right</span>
+<span class="n">s</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>        <span class="c1"># split on line boundaries</span>
+<span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span>       <span class="c1"># parts must all be strings</span>
+<span class="n">s</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">)</span>   <span class="c1"># replace all (add count arg to limit)</span>
+<span class="n">s</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;x&quot;</span><span class="p">)</span>           <span class="c1"># index or -1  (safe)</span>
+<span class="n">s</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s2">&quot;x&quot;</span><span class="p">)</span>          <span class="c1"># index or ValueError</span>
+<span class="n">s</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="s2">&quot;ab&quot;</span><span class="p">)</span>         <span class="c1"># non-overlapping occurrences</span>
+<span class="n">s</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;pre&quot;</span><span class="p">)</span>   <span class="c1"># also accepts a tuple of options</span>
+<span class="n">s</span><span class="o">.</span><span class="n">endswith</span><span class="p">((</span><span class="s2">&quot;.py&quot;</span><span class="p">,</span> <span class="s2">&quot;.txt&quot;</span><span class="p">))</span>
+<span class="n">s</span><span class="o">.</span><span class="n">lower</span><span class="p">();</span> <span class="n">s</span><span class="o">.</span><span class="n">upper</span><span class="p">();</span> <span class="n">s</span><span class="o">.</span><span class="n">title</span><span class="p">();</span> <span class="n">s</span><span class="o">.</span><span class="n">capitalize</span><span class="p">();</span> <span class="n">s</span><span class="o">.</span><span class="n">swapcase</span><span class="p">()</span>
+<span class="n">s</span><span class="o">.</span><span class="n">isdigit</span><span class="p">();</span> <span class="n">s</span><span class="o">.</span><span class="n">isalpha</span><span class="p">();</span> <span class="n">s</span><span class="o">.</span><span class="n">isalnum</span><span class="p">();</span> <span class="n">s</span><span class="o">.</span><span class="n">isspace</span><span class="p">();</span> <span class="n">s</span><span class="o">.</span><span class="n">islower</span><span class="p">()</span>
+<span class="n">s</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>            <span class="c1"># &quot;42&quot; -&gt; &quot;00042&quot;</span>
+<span class="n">s</span><span class="o">.</span><span class="n">ljust</span><span class="p">(</span><span class="mi">8</span><span class="p">);</span> <span class="n">s</span><span class="o">.</span><span class="n">rjust</span><span class="p">(</span><span class="mi">8</span><span class="p">);</span> <span class="n">s</span><span class="o">.</span><span class="n">center</span><span class="p">(</span><span class="mi">8</span><span class="p">)</span>   <span class="c1"># pad to a width</span>
+</code></pre></div>
+
+<p>Strings are immutable, so every method returns a new string. To edit characters, go <code>list(s)</code> -&gt; mutate -&gt; <code>"".join(...)</code>.</p>
+<h2 id="3-slicing"><a class="toclink" href="#3-slicing">3. Slicing</a></h2>
+<div class="codehilite"><pre><span></span><code><span class="n">a</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">stop</span><span class="p">:</span><span class="n">step</span><span class="p">]</span>    <span class="c1"># stop is EXCLUSIVE</span>
+<span class="n">a</span><span class="p">[</span><span class="mi">2</span><span class="p">:</span><span class="mi">5</span><span class="p">]</span>                <span class="c1"># indices 2, 3, 4</span>
+<span class="n">a</span><span class="p">[:</span><span class="mi">3</span><span class="p">];</span> <span class="n">a</span><span class="p">[</span><span class="mi">3</span><span class="p">:]</span>          <span class="c1"># head / tail</span>
+<span class="n">a</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">];</span> <span class="n">a</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>          <span class="c1"># from the end</span>
+<span class="n">a</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>               <span class="c1"># reversed copy</span>
+<span class="n">a</span><span class="p">[::</span><span class="mi">2</span><span class="p">]</span>                <span class="c1"># every other</span>
+<span class="n">a</span><span class="p">[:]</span>                  <span class="c1"># shallow copy of the whole sequence</span>
+<span class="n">s</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">j</span><span class="p">]</span>                <span class="c1"># substrings slice the same way</span>
+<span class="n">a</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">9</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">9</span><span class="p">]</span>    <span class="c1"># slice assignment (lists) — can change length</span>
+<span class="k">del</span> <span class="n">a</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span>            <span class="c1"># delete a slice</span>
+</code></pre></div>
+
+<p>Out-of-range slice bounds are clamped (no error): <code>a[:100]</code> is safe, while <code>a[100]</code> raises <code>IndexError</code>.</p>
+<h2 id="4-sorting-in-depth"><a class="toclink" href="#4-sorting-in-depth">4. Sorting in Depth</a></h2>
+<div class="codehilite"><pre><span></span><code><span class="nb">sorted</span><span class="p">(</span><span class="n">xs</span><span class="p">)</span>                                  <span class="c1"># new list; xs.sort() sorts in place</span>
+<span class="nb">sorted</span><span class="p">(</span><span class="n">xs</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="nb">sorted</span><span class="p">(</span><span class="n">words</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="nb">len</span><span class="p">)</span>                      <span class="c1"># by a derived key</span>
+<span class="nb">sorted</span><span class="p">(</span><span class="n">pts</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">p</span><span class="p">:</span> <span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>    <span class="c1"># multi-key, mixed direction</span>
+<span class="c1"># sort is STABLE: equal keys keep input order (sort by secondary, then primary)</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">operator</span><span class="w"> </span><span class="kn">import</span> <span class="n">itemgetter</span><span class="p">,</span> <span class="n">attrgetter</span>
+<span class="nb">sorted</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">itemgetter</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>          <span class="c1"># by column 1, then column 0</span>
+<span class="nb">sorted</span><span class="p">(</span><span class="n">objs</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">attrgetter</span><span class="p">(</span><span class="s2">&quot;age&quot;</span><span class="p">))</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">cmp_to_key</span>
+<span class="c1"># &quot;Largest Number&quot;: order so concatenation is biggest</span>
+<span class="n">nums</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">34</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">9</span><span class="p">]),</span>
+              <span class="n">key</span><span class="o">=</span><span class="n">cmp_to_key</span><span class="p">(</span><span class="k">lambda</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="p">(</span><span class="n">a</span> <span class="o">+</span> <span class="n">b</span> <span class="o">&lt;</span> <span class="n">b</span> <span class="o">+</span> <span class="n">a</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="n">a</span> <span class="o">+</span> <span class="n">b</span> <span class="o">&gt;</span> <span class="n">b</span> <span class="o">+</span> <span class="n">a</span><span class="p">)))</span>
+<span class="c1"># -&gt; [&#39;9&#39;, &#39;5&#39;, &#39;34&#39;, &#39;3&#39;, &#39;30&#39;]</span>
+</code></pre></div>
+
+<h2 id="5-math-numerics"><a class="toclink" href="#5-math-numerics">5. Math &amp; Numerics</a></h2>
+<div class="codehilite"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+<span class="n">math</span><span class="o">.</span><span class="n">gcd</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">18</span><span class="p">)</span>      <span class="c1"># 6     (math.lcm in 3.9+)</span>
+<span class="n">math</span><span class="o">.</span><span class="n">lcm</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>        <span class="c1"># 12</span>
+<span class="n">math</span><span class="o">.</span><span class="n">isqrt</span><span class="p">(</span><span class="mi">17</span><span class="p">)</span>        <span class="c1"># 4     integer sqrt, no float error</span>
+<span class="n">math</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="mf">2.7</span><span class="p">);</span> <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="mf">2.1</span><span class="p">)</span>
+<span class="n">math</span><span class="o">.</span><span class="n">factorial</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>     <span class="c1"># 120</span>
+<span class="n">math</span><span class="o">.</span><span class="n">comb</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>       <span class="c1"># 10    nCr   (math.perm for nPr)</span>
+<span class="n">math</span><span class="o">.</span><span class="n">inf</span>              <span class="c1"># same as float(&quot;inf&quot;)</span>
+<span class="n">math</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">x</span><span class="p">);</span> <span class="n">math</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>          <span class="c1"># safe float comparisons</span>
+
+<span class="nb">abs</span><span class="p">(</span><span class="o">-</span><span class="mi">5</span><span class="p">);</span> <span class="nb">pow</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">10</span><span class="p">);</span> <span class="nb">pow</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">1000</span><span class="p">)</span>      <span class="c1"># modular pow</span>
+<span class="p">(</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">bit_length</span><span class="p">()</span>      <span class="c1"># 3</span>
+<span class="p">(</span><span class="mi">7</span><span class="p">)</span><span class="o">.</span><span class="n">bit_count</span><span class="p">()</span>       <span class="c1"># 3     set-bit count (3.10+); else bin(7).count(&quot;1&quot;)</span>
+</code></pre></div>
+
+<p>Two Python-specific points to say out loud: <strong>ints are arbitrary precision</strong> — they never overflow (unlike Java/C++), and floats are IEEE-754 doubles, so <code>0.1 + 0.2 != 0.3</code> — compare with <code>math.isclose</code> or use integer/<code>Decimal</code> math when exactness matters.</p>
+<h2 id="6-unpacking-argument-forms"><a class="toclink" href="#6-unpacking-argument-forms">6. Unpacking &amp; Argument Forms</a></h2>
+<div class="codehilite"><pre><span></span><code><span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">b</span><span class="p">,</span> <span class="n">a</span>                  <span class="c1"># swap, no temp</span>
+<span class="n">first</span><span class="p">,</span> <span class="o">*</span><span class="n">rest</span> <span class="o">=</span> <span class="n">seq</span>           <span class="c1"># rest is a list</span>
+<span class="o">*</span><span class="n">init</span><span class="p">,</span> <span class="n">last</span> <span class="o">=</span> <span class="n">seq</span>
+<span class="n">a</span><span class="p">,</span> <span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>        <span class="c1"># nested</span>
+
+<span class="n">merged</span> <span class="o">=</span> <span class="p">[</span><span class="o">*</span><span class="n">a</span><span class="p">,</span> <span class="o">*</span><span class="n">b</span><span class="p">]</span>            <span class="c1"># list splat</span>
+<span class="n">combined</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">d1</span><span class="p">,</span> <span class="o">**</span><span class="n">d2</span><span class="p">}</span>      <span class="c1"># dict merge (later keys win)</span>
+<span class="n">f</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>           <span class="c1"># spread into a call</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">f</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="o">/</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">d</span><span class="p">):</span>     <span class="c1"># &quot;/&quot; = positional-only, &quot;*&quot; = keyword-only</span>
+    <span class="o">...</span>
+<span class="c1"># a, b must be positional;  d must be passed by name</span>
+</code></pre></div>
+
+<h2 id="7-copying-scope-hashability"><a class="toclink" href="#7-copying-scope-hashability">7. Copying, Scope &amp; Hashability</a></h2>
+<div class="codehilite"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">copy</span>
+<span class="n">shallow</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>         <span class="c1"># or list[:], dict.copy(), set.copy()</span>
+<span class="n">deep</span>    <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>     <span class="c1"># independent nested structures</span>
+
+<span class="n">grid</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="mi">3</span><span class="p">]</span> <span class="o">*</span> <span class="mi">3</span>             <span class="c1"># WRONG: 3 references to one row</span>
+<span class="n">grid</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="mi">3</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">)]</span>   <span class="c1"># right</span>
+</code></pre></div>
+
+<p><strong>Scope (LEGB)</strong> — names resolve Local -&gt; Enclosing -&gt; Global -&gt; Built-in. <code>global x</code> and <code>nonlocal x</code> let you rebind names in outer scopes.</p>
+<p><strong>Hashability</strong> — usable as dict keys / set members: immutables (<code>int, float, str, bool, frozenset</code>, and tuples of hashables). NOT hashable: <code>list, dict, set</code>. That's why you cast a list to a tuple to use it as a memo key or a visited-state marker.</p>
+<h2 id="8-oop-deeper"><a class="toclink" href="#8-oop-deeper">8. OOP — Deeper</a></h2>
+<h3 id="property-with-setter-and-deleter"><a class="toclink" href="#property-with-setter-and-deleter">property with setter and deleter</a></h3>
+<div class="codehilite"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">Temp</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_c</span> <span class="o">=</span> <span class="n">c</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>               <span class="c1"># getter:  t.c</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_c</span>
+    <span class="nd">@c</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>        <span class="c1"># setter:  t.c = 5</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="o">&lt;</span> <span class="o">-</span><span class="mf">273.15</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;below absolute zero&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_c</span> <span class="o">=</span> <span class="n">value</span>
+    <span class="nd">@c</span><span class="o">.</span><span class="n">deleter</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>               <span class="c1"># del t.c</span>
+        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_c</span>
+</code></pre></div>
+
+<h3 id="str-vs-repr"><a class="toclink" href="#str-vs-repr"><strong>str</strong> vs <strong>repr</strong></a></h3>
+<div class="codehilite"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">P</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">x</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>        <span class="c1"># unambiguous, for devs/debugging/REPL</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;P(x=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="si">}</span><span class="s2">)&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>         <span class="c1"># readable, for print() / users</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;point </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="c1"># print(p) uses __str__; the REPL and repr(p) use __repr__. Define __repr__ at minimum.</span>
+</code></pre></div>
+
+<h3 id="dunders-that-make-objects-behave-like-built-ins"><a class="toclink" href="#dunders-that-make-objects-behave-like-built-ins">Dunders that make objects behave like built-ins</a></h3>
+<div class="codehilite"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">Bag</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_d</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>          <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_d</span><span class="p">)</span>      <span class="c1"># len(bag)</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>   <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_d</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>         <span class="c1"># bag[k]</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span> <span class="bp">self</span><span class="o">.</span><span class="n">_d</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>           <span class="c1"># bag[k] = v</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>  <span class="k">return</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_d</span>        <span class="c1"># k in bag</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>         <span class="k">return</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_d</span><span class="p">)</span>       <span class="c1"># for x in bag</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>      <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>      <span class="c1"># bag(k) — callable</span>
+</code></pre></div>
+
+<h3 id="get-all-comparisons-from-two-methods"><a class="toclink" href="#get-all-comparisons-from-two-methods">Get all comparisons from two methods</a></h3>
+<div class="codehilite"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">total_ordering</span>
+
+<span class="nd">@total_ordering</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">V</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">=</span> <span class="n">n</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">o</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">==</span> <span class="n">o</span><span class="o">.</span><span class="n">n</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__lt__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">o</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">&lt;</span> <span class="n">o</span><span class="o">.</span><span class="n">n</span>
+    <span class="c1"># total_ordering supplies &lt;=, &gt;, &gt;=, !=</span>
+</code></pre></div>
+
+<h3 id="the-eq-hash-contract"><a class="toclink" href="#the-eq-hash-contract">The <strong>eq</strong> / <strong>hash</strong> contract</a></h3>
+<div class="codehilite"><pre><span></span><code><span class="c1"># Defining __eq__ makes the class UNHASHABLE unless you also define __hash__.</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Pt</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">o</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">)</span> <span class="o">==</span> <span class="p">(</span><span class="n">o</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">o</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>                       <span class="c1"># required to put Pt in a set/dict</span>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">))</span>
+</code></pre></div>
+
+<h3 id="new-vs-init-allocation-vs-initialization"><a class="toclink" href="#new-vs-init-allocation-vs-initialization"><strong>new</strong> vs <strong>init</strong> (allocation vs initialization)</a></h3>
+<div class="codehilite"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">Singleton</span><span class="p">:</span>
+    <span class="n">_inst</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_inst</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">cls</span><span class="o">.</span><span class="n">_inst</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span>  <span class="c1"># allocation happens here</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_inst</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="o">...</span>                                   <span class="c1"># runs on every call — init carefully</span>
+</code></pre></div>
+
+<h3 id="encapsulation-conventions"><a class="toclink" href="#encapsulation-conventions">Encapsulation conventions</a></h3>
+<div class="codehilite"><pre><span></span><code><span class="bp">self</span><span class="o">.</span><span class="n">public</span>        <span class="c1"># part of the API</span>
+<span class="bp">self</span><span class="o">.</span><span class="n">_internal</span>     <span class="c1"># convention: &quot;don&#39;t touch&quot; (NOT enforced)</span>
+<span class="bp">self</span><span class="o">.</span><span class="n">__mangled</span>     <span class="c1"># name-mangled to _Class__mangled (avoids subclass clashes)</span>
+<span class="c1"># Python has no truly private members.</span>
+</code></pre></div>
+
+<h3 id="mro-multiple-inheritance"><a class="toclink" href="#mro-multiple-inheritance">MRO &amp; multiple inheritance</a></h3>
+<div class="codehilite"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">A</span><span class="p">:</span> <span class="o">...</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">B</span><span class="p">(</span><span class="n">A</span><span class="p">):</span> <span class="o">...</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">C</span><span class="p">(</span><span class="n">A</span><span class="p">):</span> <span class="o">...</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">D</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">C</span><span class="p">):</span> <span class="o">...</span>        <span class="c1"># diamond</span>
+<span class="n">D</span><span class="o">.</span><span class="vm">__mro__</span>                 <span class="c1"># D -&gt; B -&gt; C -&gt; A -&gt; object  (C3 linearization)</span>
+<span class="c1"># super() follows the MRO, not just the literal parent -&gt; cooperative inheritance</span>
+</code></pre></div>
+
+<h3 id="duck-typing-and-protocol-structural-interfaces"><a class="toclink" href="#duck-typing-and-protocol-structural-interfaces">Duck typing and Protocol (structural interfaces)</a></h3>
+<div class="codehilite"><pre><span></span><code><span class="c1"># &quot;If it has the methods, it works&quot; — no explicit interface/inheritance needed.</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Protocol</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Comparable</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__lt__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span> <span class="o">...</span>
+<span class="c1"># Any class with __lt__ satisfies Comparable — structural, not nominal typing.</span>
+</code></pre></div>
+
+<h3 id="composition-over-inheritance"><a class="toclink" href="#composition-over-inheritance">Composition over inheritance</a></h3>
+<div class="codehilite"><pre><span></span><code><span class="c1"># Prefer has-a (composition) over is-a (inheritance) when sharing behavior, not identity.</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Engine</span><span class="p">:</span> <span class="o">...</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Car</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">engine</span> <span class="o">=</span> <span class="n">Engine</span><span class="p">()</span>    <span class="c1"># swappable, looser coupling</span>
+</code></pre></div>
+
+<h3 id="runtime-checks-the-class-mutable-trap-and-richer-dataclasses"><a class="toclink" href="#runtime-checks-the-class-mutable-trap-and-richer-dataclasses">Runtime checks, the class-mutable trap, and richer dataclasses</a></h3>
+<div class="codehilite"><pre><span></span><code><span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">))</span>       <span class="c1"># tuple = &quot;any of&quot;</span>
+<span class="nb">issubclass</span><span class="p">(</span><span class="n">Savings</span><span class="p">,</span> <span class="n">Account</span><span class="p">)</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Bad</span><span class="p">:</span>
+    <span class="n">items</span> <span class="o">=</span> <span class="p">[]</span>                    <span class="c1"># SHARED across all instances — mutating leaks!</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Good</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">items</span> <span class="o">=</span> <span class="p">[]</span>           <span class="c1"># per-instance</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>           <span class="c1"># immutable + hashable (usable as a dict key)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Point</span><span class="p">:</span>
+    <span class="n">x</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">y</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>      <span class="c1"># validation after the auto __init__</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;x must be non-negative&quot;</span><span class="p">)</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">NamedTuple</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Color</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">):</span>          <span class="c1"># typed, immutable, lightweight record</span>
+    <span class="n">r</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">g</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">b</span><span class="p">:</span> <span class="nb">int</span>
+</code></pre></div>
+
+<h2 id="9-file-access-processing-error-handling"><a class="toclink" href="#9-file-access-processing-error-handling">9. File Access, Processing &amp; Error Handling</a></h2>
+<div class="codehilite"><pre><span></span><code><span class="c1"># Reading — `with` guarantees the file closes, even on exception</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;data.txt&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="n">text</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>               <span class="c1"># whole file as one string</span>
+    <span class="c1"># f.readlines()               # list of lines (each keeps its &quot;\n&quot;)</span>
+    <span class="c1"># for line in f: ...          # lazy, line-by-line — best for big files</span>
+
+<span class="c1"># Writing / appending</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;out.txt&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>   <span class="c1"># &quot;w&quot; truncates</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;hello</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">writelines</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>           <span class="c1"># does NOT add newlines for you</span>
+
+<span class="c1"># Strip the trailing newline while processing</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;data.txt&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="n">rows</span> <span class="o">=</span> <span class="p">[</span><span class="n">line</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">f</span><span class="p">]</span>
+</code></pre></div>
+
+<p>File modes:</p>
+<div class="codehilite"><pre><span></span><code>&quot;r&quot;  read (default)        &quot;w&quot;  write (truncate)      &quot;a&quot;  append
+&quot;x&quot;  create, fail if exists                           &quot;+&quot;  read + write
+&quot;b&quot;  binary (rb / wb)      &quot;t&quot;  text (default)
+</code></pre></div>
+
+<p><code>pathlib</code> for paths and one-shot read/write:</p>
+<div class="codehilite"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="n">p</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;data&quot;</span><span class="p">)</span> <span class="o">/</span> <span class="s2">&quot;input.txt&quot;</span>    <span class="c1"># OS-safe join</span>
+<span class="n">p</span><span class="o">.</span><span class="n">exists</span><span class="p">();</span> <span class="n">p</span><span class="o">.</span><span class="n">is_file</span><span class="p">();</span> <span class="n">p</span><span class="o">.</span><span class="n">is_dir</span><span class="p">()</span>
+<span class="n">text</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>   <span class="c1"># read in one call</span>
+<span class="n">p</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="s2">&quot;...&quot;</span><span class="p">)</span>                    <span class="c1"># write in one call</span>
+<span class="n">p</span><span class="o">.</span><span class="n">name</span><span class="p">;</span> <span class="n">p</span><span class="o">.</span><span class="n">stem</span><span class="p">;</span> <span class="n">p</span><span class="o">.</span><span class="n">suffix</span><span class="p">;</span> <span class="n">p</span><span class="o">.</span><span class="n">parent</span>     <span class="c1"># &quot;input.txt&quot;, &quot;input&quot;, &quot;.txt&quot;, Path(&quot;data&quot;)</span>
+<span class="nb">list</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">&quot;*.py&quot;</span><span class="p">))</span>           <span class="c1"># pattern search</span>
+</code></pre></div>
+
+<p>JSON and CSV:</p>
+<div class="codehilite"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;config.json&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="n">cfg</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>            <span class="c1"># file -&gt; object</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;out.json&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">cfg</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>   <span class="c1"># object -&gt; file</span>
+<span class="n">obj</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>              <span class="c1"># string &lt;-&gt; object  (json.dumps to serialize)</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">csv</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;data.csv&quot;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>    <span class="c1"># newline=&quot;&quot; is required for csv</span>
+    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictReader</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>           <span class="c1"># each row is a dict keyed by header</span>
+        <span class="o">...</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;out.csv&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="n">w</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">writer</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+    <span class="n">w</span><span class="o">.</span><span class="n">writerow</span><span class="p">([</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;score&quot;</span><span class="p">])</span>
+    <span class="n">w</span><span class="o">.</span><span class="n">writerows</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span>
+</code></pre></div>
+
+<p>File error handling — catch the specific failure:</p>
+<div class="codehilite"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="n">text</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;maybe.txt&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+<span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
+    <span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>                     <span class="c1"># sensible default</span>
+<span class="k">except</span> <span class="ne">PermissionError</span><span class="p">:</span>
+    <span class="k">raise</span>                         <span class="c1"># can&#39;t fix it here</span>
+<span class="k">except</span> <span class="ne">UnicodeDecodeError</span><span class="p">:</span>
+    <span class="n">text</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;maybe.txt&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">errors</span><span class="o">=</span><span class="s2">&quot;replace&quot;</span><span class="p">)</span>
+<span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>              <span class="c1"># base class for I/O failures</span>
+    <span class="k">raise</span>
+</code></pre></div>
+
+<table>
+<thead>
+<tr>
+<th>Exception</th>
+<th>Raised when</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>FileNotFoundError</code></td>
+<td>path doesn't exist (read mode)</td>
+</tr>
+<tr>
+<td><code>PermissionError</code></td>
+<td>no read/write permission</td>
+</tr>
+<tr>
+<td><code>IsADirectoryError</code></td>
+<td>opened a directory as a file</td>
+</tr>
+<tr>
+<td><code>FileExistsError</code></td>
+<td><code>"x"</code> mode on an existing file</td>
+</tr>
+<tr>
+<td><code>UnicodeDecodeError</code></td>
+<td>bytes don't decode with the given encoding</td>
+</tr>
+<tr>
+<td><code>OSError</code></td>
+<td>base class for all of the above</td>
+</tr>
+</tbody>
+</table>
+<p>The <code>with</code> block is the idiomatic guarantee the handle closes; the manual equivalent is <code>try/finally</code> with <code>f.close()</code>.</p>
+<h2 id="10-io-input-parsing-online-assessment-settings"><a class="toclink" href="#10-io-input-parsing-online-assessment-settings">10. I/O &amp; Input Parsing (online-assessment settings)</a></h2>
+<div class="codehilite"><pre><span></span><code><span class="n">n</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">input</span><span class="p">())</span>                        <span class="c1"># one int on a line</span>
+<span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">input</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>        <span class="c1"># two ints on a line</span>
+<span class="n">nums</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">input</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()))</span>  <span class="c1"># a row of ints</span>
+<span class="n">grid</span> <span class="o">=</span> <span class="p">[</span><span class="nb">input</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">rows</span><span class="p">)]</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">stdin</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>         <span class="c1"># fast bulk read; index through tokens</span>
+<span class="n">it</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+<span class="n">n</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="n">it</span><span class="p">))</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="o">*</span><span class="n">nums</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s2">&quot; &quot;</span><span class="p">)</span>                   <span class="c1"># space-separated row</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">results</span><span class="p">)))</span>   <span class="c1"># fast bulk output</span>
+</code></pre></div>
+
+<p>CodeSignal / HackerRank / Codility OAs hand you raw stdin and make you parse it — directly relevant to OA-format rounds. For large inputs, <code>sys.stdin</code> beats repeated <code>input()</code>.</p>
+<h2 id="11-smaller-things-worth-knowing"><a class="toclink" href="#11-smaller-things-worth-knowing">11. Smaller Things Worth Knowing</a></h2>
+<p>f-string format mini-language:</p>
+<div class="codehilite"><pre><span></span><code><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">x</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span>      <span class="c1"># 2 decimals</span>
+<span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">n</span><span class="si">:</span><span class="s2">04d</span><span class="si">}</span><span class="s2">&quot;</span>      <span class="c1"># zero-pad to width 4</span>
+<span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">n</span><span class="si">:</span><span class="s2">,</span><span class="si">}</span><span class="s2">&quot;</span>        <span class="c1"># thousands separators</span>
+<span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">n</span><span class="si">:</span><span class="s2">b</span><span class="si">}</span><span class="s2">&quot;</span>        <span class="c1"># binary  (also :x hex, :o octal)</span>
+<span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">s</span><span class="si">:</span><span class="s2">&lt;8</span><span class="si">}</span><span class="s2">&quot;</span>       <span class="c1"># left-pad (also :&gt;8 right, :^8 center)</span>
+<span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">r</span><span class="si">:</span><span class="s2">.1%</span><span class="si">}</span><span class="s2">&quot;</span>      <span class="c1"># percentage</span>
+</code></pre></div>
+
+<div class="codehilite"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">operator</span><span class="w"> </span><span class="kn">import</span> <span class="n">itemgetter</span><span class="p">,</span> <span class="n">attrgetter</span><span class="p">,</span> <span class="n">add</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">partial</span>
+<span class="n">inc</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">add</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>           <span class="c1"># inc(5) -&gt; 6</span>
+
+<span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">&lt;</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span>                 <span class="c1"># True — lists/tuples compare lexicographically</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">ChainMap</span>
+<span class="n">cfg</span> <span class="o">=</span> <span class="n">ChainMap</span><span class="p">(</span><span class="n">overrides</span><span class="p">,</span> <span class="n">defaults</span><span class="p">)</span>   <span class="c1"># layered lookup, first match wins</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">contextlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">suppress</span>
+<span class="k">with</span> <span class="n">suppress</span><span class="p">(</span><span class="ne">KeyError</span><span class="p">):</span>        <span class="c1"># ignore a specific exception cleanly</span>
+    <span class="k">del</span> <span class="n">d</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\d+&quot;</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>           <span class="c1"># all digit-runs</span>
+<span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\s+&quot;</span><span class="p">,</span> <span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>          <span class="c1"># collapse whitespace</span>
+<span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;^[a-z]+$&quot;</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>        <span class="c1"># anchored match -&gt; Match or None</span>
+</code></pre></div></main>
 </div>
 <script>
 document.querySelectorAll('.codehilite').forEach(function(box){
